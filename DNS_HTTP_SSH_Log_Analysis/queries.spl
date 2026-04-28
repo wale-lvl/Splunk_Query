@@ -1,6 +1,6 @@
-###################################
-# DNS QUERIES
-###################################
+----------------------------------
+DNS QUERIES
+----------------------------------
 
 # basic DNS search
 index=* sourcetype=dnslogs
@@ -37,9 +37,9 @@ index=* sourcetype=dnslogs
 index=* sourcetype=dnslogs fqdn="maliciousdomain.com"
 | stats count by src_ip
 
-###################################
-# HTTP QUERIES
-###################################
+----------------------------------
+ HTTP QUERIES
+----------------------------------
 
 # basic HTTP traffic check
 index=* sourcetype=httplogs
@@ -74,9 +74,9 @@ index=* sourcetype=httplogs
 | stats count by uri
 | where count < 3
 
-###################################
-# SSH QUERIES
-###################################
+----------------------------------
+ SSH QUERIES
+----------------------------------
 
 # basic SSH log check
 index=* sourcetype=sshlogs
