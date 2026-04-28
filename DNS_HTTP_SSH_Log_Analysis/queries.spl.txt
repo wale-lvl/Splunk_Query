@@ -1,0 +1,113 @@
+###################################
+# DNS QUERIES
+###################################
+
+# basic DNS search
+index=* sourcetype=dnslogs
+
+# filter DNS-related events from noisy logs
+index=* sourcetype=dnslogs
+| regex _raw="(?i)\b(dns|query|response|port 53)\b"
+
+# top queried domains
+index=* sourcetype=dnslogs
+| stats count by fqdn
+| sort -count
+
+# high-frequency queries per source
+index=* sourcetype=dnslogs
+| stats count by src_ip, fqdn
+| where count > 100
+
+# unusual domains
+index=* sourcetype=dnslogs
+| stats count by fqdn
+| where count < 3
+
+# long domains
+index=* sourcetype=dnslogs
+| eval len=len(fqdn)
+| where len > 50
+
+# top talkers
+index=* sourcetype=dnslogs
+| top src_ip
+
+# pivot on a suspicious domain
+index=* sourcetype=dnslogs fqdn="maliciousdomain.com"
+| stats count by src_ip
+
+###################################
+# HTTP QUERIES
+###################################
+
+# basic HTTP traffic check
+index=* sourcetype=httplogs
+
+# top requested URLs
+index=* sourcetype=httplogs
+| stats count by uri
+| sort -count
+
+# suspicious methods
+index=* sourcetype=httplogs
+| stats count by method
+| where method NOT IN ("GET", "POST")
+
+# high request volume per IP
+index=* sourcetype=httplogs
+| stats count by src_ip
+| where count > 100
+
+# heavy error traffic
+index=* sourcetype=httplogs status>=400
+| stats count by src_ip
+| sort -count
+
+# long URIs
+index=* sourcetype=httplogs
+| eval len=len(uri)
+| where len > 100
+
+# unusual endpoints
+index=* sourcetype=httplogs
+| stats count by uri
+| where count < 3
+
+###################################
+# SSH QUERIES
+###################################
+
+# basic SSH log check
+index=* sourcetype=sshlogs
+
+# failed login attempts
+index=* sourcetype=sshlogs "Failed password"
+| stats count by src_ip
+| sort -count
+
+# possible brute force
+index=* sourcetype=sshlogs "Failed password"
+| stats count by src_ip
+| where count > 20
+
+# successful login after failures
+index=* sourcetype=sshlogs
+| transaction src_ip maxspan=5m
+| search "Failed password" AND "Accepted password"
+
+# multiple usernames from one IP
+index=* sourcetype=sshlogs
+| stats dc(user) as users by src_ip
+| where users > 5
+
+# unusual source IPs
+index=* sourcetype=sshlogs
+| stats count by src_ip
+| where count < 3
+
+# login outside normal hours
+index=* sourcetype=sshlogs "Accepted password"
+| eval hour=strftime(_time,"%H")
+| where hour < 6 OR hour > 22
+| stats count by user, src_ip, hour
