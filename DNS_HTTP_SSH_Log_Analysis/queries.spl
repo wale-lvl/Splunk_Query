@@ -1,6 +1,6 @@
-###################################
-# DNS
-###################################
+----------------------------------
+ DNS
+----------------------------------
 
 # basic DNS activity check
 index=* sourcetype=dnslogs
@@ -38,9 +38,9 @@ index=* sourcetype=dnslogs
 | stats dc(fqdn) by src_ip
 | where dc(fqdn) > 50
 
-###################################
-# HTTP
-###################################
+----------------------------------
+ HTTP
+----------------------------------
 
 # basic HTTP traffic check
 index=* sourcetype=httplogs
@@ -80,9 +80,9 @@ index=* sourcetype=httplogs
 | stats dc(uri) as unique_uris by src_ip
 | where unique_uris > 50
 
-###################################
-# SSH
-###################################
+----------------------------------
+ SSH
+----------------------------------
 
 # basic SSH log check
 index=* sourcetype=sshlogs
