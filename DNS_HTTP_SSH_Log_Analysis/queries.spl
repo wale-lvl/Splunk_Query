@@ -1,13 +1,9 @@
-----------------------------------
-DNS QUERIES
-----------------------------------
+###################################
+# DNS
+###################################
 
-# basic DNS search
+# basic DNS activity check
 index=* sourcetype=dnslogs
-
-# filter DNS-related events from noisy logs
-index=* sourcetype=dnslogs
-| regex _raw="(?i)\b(dns|query|response|port 53)\b"
 
 # top queried domains
 index=* sourcetype=dnslogs
@@ -19,7 +15,7 @@ index=* sourcetype=dnslogs
 | stats count by src_ip, fqdn
 | where count > 100
 
-# unusual domains
+# unique domains
 index=* sourcetype=dnslogs
 | stats count by fqdn
 | where count < 3
@@ -37,9 +33,14 @@ index=* sourcetype=dnslogs
 index=* sourcetype=dnslogs fqdn="maliciousdomain.com"
 | stats count by src_ip
 
-----------------------------------
- HTTP QUERIES
-----------------------------------
+# possible dns tunneling
+index=* sourcetype=dnslogs
+| stats dc(fqdn) by src_ip
+| where dc(fqdn) > 50
+
+###################################
+# HTTP
+###################################
 
 # basic HTTP traffic check
 index=* sourcetype=httplogs
@@ -74,9 +75,14 @@ index=* sourcetype=httplogs
 | stats count by uri
 | where count < 3
 
-----------------------------------
- SSH QUERIES
-----------------------------------
+# directory scanning
+index=* sourcetype=httplogs
+| stats dc(uri) as unique_uris by src_ip
+| where unique_uris > 50
+
+###################################
+# SSH
+###################################
 
 # basic SSH log check
 index=* sourcetype=sshlogs
@@ -101,7 +107,7 @@ index=* sourcetype=sshlogs
 | stats dc(user) as users by src_ip
 | where users > 5
 
-# unusual source IPs
+# unique source IPs
 index=* sourcetype=sshlogs
 | stats count by src_ip
 | where count < 3
